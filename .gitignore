@@ -1,0 +1,7 @@
+/build/* 
+!/build/wog.sln 
+!/build/wog.filters
+!/build/wog.vcxproj
+
+/bin 
+!/bin/LICENSE
