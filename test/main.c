@@ -1,6 +1,11 @@
+/**
+* Copyright (c) 2015~2017 chai(neonum)
+*
+* This library is free software; you can redistribute it and/or modify it
+* under the terms of the MIT license. See LICENSE for details.
+*/
 #include "../src/wog.h"
 #include <stdio.h>
-#include <Windows.h>
 #include <gl/GL.h>
 
 void init()
@@ -85,11 +90,19 @@ void draw()
     glRotatef(0.5, 0.6, 0.4, 1.0); // 2. Rotate the object.
 }
 
+void onSizeChanged(wog_Window* wnd)
+{
+    printf("size changed\n");
+}
+
 int main(int argc, char** argv)
 {
-    wog_Window* wnd = wog_createWindow("test", 300, 300, 0, 0, 0);
+    wog_Window* wnd = wog_createWindow("wog test", 300, 300, 400, 400, WOG_WND_RESIZABLE);
     wog_GLContext* ctx = wog_createGLContext(wnd);
     wog_makeCurrent(wnd, ctx); 
+    int w, h; 
+    wog_getwindowsize(wnd, &w, &h);
+    wog_registerResizeCallback(onSizeChanged);
     int running = 1;
     void init();
     while (running)
@@ -99,17 +112,38 @@ int main(int argc, char** argv)
         {
             if (e.type == WOG_EKEYDOWN)
             {
-                printf("%d", e.key);
+                printf("key is pressed: %d\n", e.key);
+                if (e.key == 'A')
+                {
+                    printf("A key is down\n");
+                }
             }
-            if (e.type == WOG_EQUIT)
+            if (e.type == WOG_ECLOSE)
             {
-                running = 0; 
+                running = 0;
+                break;
             }
             if (e.type == WOG_EMOUSEMOTION)
             {
-                printf("%d .. %d\n", e.pos.x, e.pos.y);
+                printf("mouse moved: (%d , %d) \n", e.pos.x, e.pos.y);
+            }
+            if (e.type == WOG_EMOUSEWHEEL)
+            {
+                printf("mouse wheel scrolled: %d\n", e.wheel);
+            }
+            if (e.type == WOG_EMOUSEBUTTONDOWN)
+            {
+                char* bnt = 0 ;
+                switch(e.button)
+                {
+                case WOG_MOUSE_LBUTTON: bnt = "left"; break;
+                case WOG_MOUSE_RBUTTON: bnt = "right"; break;
+                case WOG_MOUSE_MIDDLE: bnt = "middle"; break;
+                }
+                printf("%s mouse button is pressed\n", bnt);
             }
         }
+        if (!running) break;
 
         update(1/ 60.f); 
 
@@ -119,11 +153,12 @@ int main(int argc, char** argv)
         draw();
 
         wog_swapBuffers(wnd);
-        Sleep(16);  // 60fps
+        wog_sleep(16);  // 60fps
     }
 
-    wog_destroyGLContext(ctx);
     wog_destroyWindow(wnd);
+    wog_destroyGLContext(ctx);
+    wog_quit(); 
 
     return 0;
 }

@@ -7,31 +7,46 @@
 
 #ifndef _WOG_H
 #define _WOG_H
-#include <Windows.h>
+#include <Windows.h> // for virtual key value
 
 typedef unsigned int uint32; 
 typedef unsigned short uint16; 
 
-enum 
+enum // event type 
 {
-    WOG_EUNKNOWN = 0, // unknown event  
-    WOG_EKEYDOWN,     // key pressed 
-    WOG_EKEYUP,       // key released 
-    WOG_EMOUSEMOTION, // mouse motion 
-    WOG_ERESIZE,      // resize 
-    WOG_EQUIT,
+    WOG_EUNKNOWN = 0,     // unknown event  
+
+    WOG_EKEYDOWN,         // key pressed 
+    WOG_EKEYUP,           // key released 
+
+    WOG_EMOUSEMOTION,     // mouse motion 
+    WOG_EMOUSEWHEEL,      // mouse wheel scrolling
+    WOG_EMOUSEBUTTONDOWN, // mosue button down 
+    WOG_EMOUSEBUTTONUP,   // mosue button down 
+
+    WOG_ECLOSE,           // close window
+};
+
+enum // mouse button event, e.button value
+{
+    WOG_MOUSE_LBUTTON, // left mouse button 
+    WOG_MOUSE_RBUTTON, // right mouse button 
+    WOG_MOUSE_MIDDLE,  // middle button 
 };
 
 typedef struct wog_Event
 {
     int type; 
-    union
+    union             // event value 
     {
-        int key;      // for key 
+        int key;      // for key, simply use windows virtual key value 
+                      // see https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
         struct        // for mouse motion
         {
             int x, y; // mouse position 
         }pos;
+        int wheel;    // 1 indicate scroll up and -1 indicate scrool down
+        int button;   // mouse button 
     };
 }wog_Event;
 
@@ -50,12 +65,20 @@ typedef struct wog_Window wog_Window;
 */
 typedef struct wog_GLContext wog_GLContext;
 
+enum // window style flag
+{
+    WOG_WND_HIDDEN     = 4, 
+    WOG_WND_RESIZABLE  = 8,
+    WOG_WND_DISABLE    = 16, 
+};
+
 /**
 * Create window with given configures. 
 * flag would be:
-*    WOG_WND_FULLSCREEN 
-*    WOG_WND_HIDDEN
-*    WOG_WND_RESIZABLE
+*     WOG_WND_HIDDEN
+*     WOG_WND_RESIZABLE
+*     WOG_WND_DISABLE
+* or just 0;  
 */
 wog_Window* wog_createWindow(const char* title, int width, int height, int x, int y, uint32 flags); 
 
@@ -72,10 +95,27 @@ void wog_destroyGLContext(wog_GLContext* cxt);
 */
 void wog_swapBuffers(wog_Window* wnd); 
 
-void wog_flushMessageQueue();
-
 int wog_pollEvent(wog_Window* wnd, wog_Event* e);
 
 void wog_getMouse(wog_Window* wnd, int *x, int *y);
+
+void wog_sleep(int ms);
+
+void wog_getwindowsize(wog_Window* wnd, int* width, int* height); 
+
+void wog_quit(); 
+
+void wog_show(wog_Window* wnd);
+
+void wog_hide(wog_Window* wnd);
+
+typedef void(*wog_Callback)(wog_Window* wnd) ;
+
+/**
+* Register callback functions. 
+*/
+void wog_registerResizeCallback(wog_Callback cal);
+void wog_registerQuitCallback(wog_Callback cal);
+
 
 #endif
